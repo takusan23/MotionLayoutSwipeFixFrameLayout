@@ -2,7 +2,7 @@
 <MotionScene xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <ConstraintSet android:id="@+id/activity_main_motion_transition_start">
+    <ConstraintSet android:id="@+id/fragment_video_player_motion_transition_start">
         <Constraint
             android:id="@+id/player_image_view"
             android:layout_width="160dp"
@@ -21,7 +21,7 @@
             app:layout_constraintTop_toBottomOf="@+id/player_image_view" />
     </ConstraintSet>
 
-    <ConstraintSet android:id="@+id/activity_main_motion_transition_end">
+    <ConstraintSet android:id="@+id/fragment_video_player_motion_transition_end">
         <Constraint
             android:id="@+id/player_image_view"
             android:layout_width="0dp"
@@ -40,8 +40,8 @@
     </ConstraintSet>
 
     <Transition
-        app:constraintSetEnd="@id/activity_main_motion_transition_end"
-        app:constraintSetStart="@+id/activity_main_motion_transition_start">
+        app:constraintSetEnd="@id/fragment_video_player_motion_transition_end"
+        app:constraintSetStart="@+id/fragment_video_player_motion_transition_start">
         <OnSwipe
             app:dragDirection="dragUp"
             app:touchAnchorId="@+id/player_image_view"
