@@ -17,7 +17,6 @@ import androidx.core.view.GestureDetectorCompat
  * 以下の問題を解決できます。
  * - MotionLayoutの下(階層的に上)にRecyclerViewを置くとクリックイベントが奪われてスクロール出来ない
  * -`<onSwipe>`に指定したViewには[setOnClickListener]が使えないので押したときの処理ができない
- * - <onSwipe>`で指定したView以外でもなぜかスワイプできてしまう。
  *
  * この問題を直すFrameLayout。
  *
