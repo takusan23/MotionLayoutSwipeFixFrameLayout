@@ -6,11 +6,11 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import io.github.takusan23.motionlayoutswipefixframelayoutexample.DataClass.VideoListData
+import io.github.takusan23.motionlayoutswipefixframelayoutexample.DataClass.ListData
 import io.github.takusan23.motionlayoutswipefixframelayoutexample.R
 
 /** MainActivityに表示するRecyclerViewのAdapter */
-class VideoListAdapter(val list: ArrayList<VideoListData>) : RecyclerView.Adapter<VideoListAdapter.ViewHolder>() {
+class ListAdapter(val list: ArrayList<ListData>) : RecyclerView.Adapter<ListAdapter.ViewHolder>() {
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val imageView = itemView.findViewById<ImageView>(R.id.adapter_imageview)

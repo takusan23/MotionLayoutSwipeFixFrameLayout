@@ -44,6 +44,7 @@
         app:constraintSetStart="@+id/activity_main_motion_transition_start">
         <OnSwipe
             app:dragDirection="dragUp"
-            app:touchAnchorId="@+id/player_image_view" />
+            app:touchAnchorId="@+id/player_image_view"
+            app:touchRegionId="@+id/player_image_view" />
     </Transition>
 </MotionScene>
