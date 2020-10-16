@@ -43,8 +43,6 @@ class MotionLayoutSwipeFixFrameLayout(context: Context, attributeSet: AttributeS
      *
      * MotionLayoutのConstraintSetで指定したIDを引数に入れることでそのIDの状態ならタッチを渡すことが出来ます。
      *
-     * ただし、クリックの行き場がない場合はMotionLayoutが動作してしまうので、RecyclerViewを置く、setOnClickListener / isClickable を設定する等してください。
-     *
      * ここで入れたIDとタッチ中MotionLayoutの状態を取得して、一致している場合はタッチを特別に渡します。
      *
      * もし`<onSwipe>`が動作してしまう場合は`<onSwipe>`に`touchRegionId`を足してみてください。
