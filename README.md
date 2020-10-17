@@ -154,7 +154,9 @@ activity_main_swipe_fix_framelayout.apply {
 隠し味の恋心～
 
 - https://github.com/takusan23/MotionLayoutSwipeFixFrameLayoutExample_QuickSettingsPanel/tree/master
-- このリポジトリの`app`フォルダに書いてあるAndroidアプリが上のGIFアニメになってます。
+
+- ちなみに一番上においたGIFは、このリポジトリにある`app`フォルダを参照してください
+    - MainActivityには動画一覧RecyclerViewが、その上にMotionLayoutを使ったFragment(VideoPlayerFragement)が乗っています。
 
 # メモ
 - ConstraintLayout(MotionLayout)の重なりは`android:elevation`によって決まるそうです。なので書いたのが早い順とかではない模様
@@ -165,7 +167,7 @@ activity_main_swipe_fix_framelayout.apply {
 
 # ライセンス
 ```
-Copyright [2020] [takusan_23]
+Copyright 2020 takusan_23
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

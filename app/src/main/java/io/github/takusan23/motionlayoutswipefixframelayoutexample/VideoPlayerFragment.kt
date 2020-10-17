@@ -24,18 +24,26 @@ class VideoPlayerFragment : Fragment() {
         activity_main_swipe_fix_framelayout.apply {
             allowIdList.add(R.id.fragment_video_player_motion_transition_end)
             // 以下2つは必須
-            swipeTargetView = player_image_view
+            swipeTargetView = player_framelayout
             motionLayout = fragment_video_player_motionlayout
+
+            blockViewList.add(player_fragment_play_button)
 
             // swipeTargetViewをクリックさせたい場合は指定してね
             onSwipeTargetViewClickFunc = {
                 // プレイヤー押したとき。setOnClickListener代わり
-                Toast.makeText(context, "プレイヤー押した！", Toast.LENGTH_SHORT).show()
+                showToast("プレイヤー押した！")
             }
 
             // タブルタップ版
             onSwipeTargetViewDoubleClickFunc = { ev ->
-                Toast.makeText(context, "ダブルタップ", Toast.LENGTH_SHORT).show()
+                showToast("だぶるたっぷ")
+            }
+
+            onBlockViewClickFunc = { view ->
+                if (view?.id == player_fragment_play_button?.id) {
+                    showToast("再生")
+                }
             }
 
         }
@@ -52,6 +60,11 @@ class VideoPlayerFragment : Fragment() {
             adapter = ListAdapter(commentList)
         }
 
+    }
+
+    fun showToast(message: String) {
+        println(message)
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
     }
 
 }

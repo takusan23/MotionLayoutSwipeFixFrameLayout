@@ -16,7 +16,7 @@ import androidx.core.view.GestureDetectorCompat
  *
  * 以下の問題を解決できます。
  * - MotionLayoutの下(階層的に上)にRecyclerViewを置くとクリックイベントが奪われてスクロール出来ない
- * -`<onSwipe>`に指定したViewには[setOnClickListener]が使えないので押したときの処理ができない
+ * - `<onSwipe>`に指定したViewには[setOnClickListener]が使えないので押したときの処理ができない
  *
  * この問題を直すFrameLayout。
  *
@@ -29,12 +29,15 @@ import androidx.core.view.GestureDetectorCompat
  *          - [MotionLayout]
  *              - 動かすView
  *
- * *あと`<onSwipe>`*には`touchRegionId`を指定する必要があります
+ * **あと`<onSwipe>`には`touchRegionId`を指定する必要があります**
  * */
 class MotionLayoutSwipeFixFrameLayout(context: Context, attributeSet: AttributeSet? = null) : FrameLayout(context, attributeSet) {
 
     /** ドラッグする（スワイプに設定した）View。 */
     var swipeTargetView: View? = null
+
+    /** MotionLayoutの状態を知るためにMotionLayoutが必要 */
+    var motionLayout: MotionLayout? = null
 
     /**
      * 強制的にクリックを渡す時に使う。ここで指定しない場合、MotionLayout傘下にRecyclerView等が有ってもスクロール出来ない可能性があります。
@@ -48,8 +51,16 @@ class MotionLayoutSwipeFixFrameLayout(context: Context, attributeSet: AttributeS
      * */
     val allowIdList = arrayListOf<Int>()
 
-    /** MotionLayoutの状態を知るためにMotionLayoutが必要 */
-    var motionLayout: MotionLayout? = null
+    /**
+     * [swipeTargetView]の上にViewを重ねた場合、重ねたViewと同時に[onSwipeTargetViewClickFunc]が呼ばれてしまう。
+     *
+     * [onSwipeTargetViewDoubleClickFunc]を呼ばずに、重ねたViewのクリックイベントのみを取る場合はまずこの配列にViewを追加してください。
+     *
+     * その後、[onBlockViewClickFunc]を利用することで、重ねたViewのクリックのみを処理できます。
+     *
+     * もし、MotionLayoutを動かしたくない場合は、重ねるViewに[View.isClickable]を[false]にすることで、MotionLayoutも動かなくなります。
+     * */
+    var blockViewList = arrayListOf<View>()
 
     /**
      * [swipeTargetView]のクリックイベント
@@ -78,6 +89,15 @@ class MotionLayoutSwipeFixFrameLayout(context: Context, attributeSet: AttributeS
      * */
     private var lastTouchTime = -1L
 
+    /**
+     * クリック位置が[blockViewList]に入れたViewと同じ場合はこの高階関数が呼ばれます
+     *
+     * 引数のViewには[blockViewList]の中から一致したViewが入っています。[View.getId]を利用することで分岐できると思います。
+     *
+     * */
+    var onBlockViewClickFunc: ((view: View?) -> Unit)? = null
+
+
     /** 子のViewへタッチイベントを渡すかどうか */
     override fun onInterceptTouchEvent(ev: MotionEvent?): Boolean {
 
@@ -85,26 +105,35 @@ class MotionLayoutSwipeFixFrameLayout(context: Context, attributeSet: AttributeS
 
             // タッチがswipeTargetViewの中にあるときのみタッチイベントを渡す
             val isTouchingSwipeTargetView = ev.x > swipeTargetView!!.left && ev.x < swipeTargetView!!.right && ev.y > swipeTargetView!!.top && ev.y < swipeTargetView!!.bottom
-
             if (isTouchingSwipeTargetView) {
+
                 // クリックさせるなど
-                if (ev.action == MotionEvent.ACTION_DOWN) {
-                    postDelayed({
-
-                        // タブルタップの処理
-                        if (lastTouchTime != -1L && (System.currentTimeMillis() - lastTouchTime) <= DOUBLE_TAP_MAX_DURATION_MS) {
-                            // タブルタップとして扱う
-                            onSwipeTargetViewDoubleClickFunc?.invoke(ev)
-                            lastTouchTime = -1
-                        } else {
-                            // もういっかい！もういっかい！
-                            lastTouchTime = System.currentTimeMillis()
-                        }
-
-                        // 普通のクリック
-                        onSwipeTargetViewClickFunc?.invoke()
-
-                    }, onSwipeTargetViewClickFuncDelayMs)
+                if (ev.action == MotionEvent.ACTION_UP) {
+                    // MotionLayoutにはクリックを渡さないけど、指定したViewのときにはクリックを渡したい場合。
+                    val blockTouchList = blockViewList.filter { blockView -> ev.x > blockView.left && ev.x < blockView.right && ev.y > blockView.top && ev.y < blockView.bottom }
+                    // 条件にあったBlockViewがあれば
+                    if (blockTouchList.isNotEmpty()) {
+                        postDelayed({
+                            // MotionLayoutへタッチを渡さないけど押したViewのクリックは渡す
+                            blockTouchList.forEach { blockView ->
+                                onBlockViewClickFunc?.invoke(blockView) // 代わりの関数で代替する
+                            }
+                        }, onSwipeTargetViewClickFuncDelayMs)
+                    } else {
+                        postDelayed({
+                            // タブルタップの処理
+                            if (lastTouchTime != -1L && (System.currentTimeMillis() - lastTouchTime) <= DOUBLE_TAP_MAX_DURATION_MS) {
+                                // タブルタップとして扱う
+                                onSwipeTargetViewDoubleClickFunc?.invoke(ev)
+                                lastTouchTime = -1
+                            } else {
+                                // もういっかい！もういっかい！
+                                lastTouchTime = System.currentTimeMillis()
+                            }
+                            // 普通のクリック
+                            onSwipeTargetViewClickFunc?.invoke()
+                        }, onSwipeTargetViewClickFuncDelayMs)
+                    }
                 }
                 // 指定したViewを動かしている場合は渡す
                 return super.onInterceptTouchEvent(ev)
