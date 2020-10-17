@@ -14,7 +14,7 @@ Kotlinで書かれています。
 
 # 特徴
 - `<onSwipe>`でタッチイベントが奪われてしまう問題を解決
-- `<onSwipe>`に指定した`touchAnchorId`では、`View#setOnClickListener`が使えないが、これを使うと代替となる関数を用意
+- `<onSwipe>`に指定した`touchAnchorId`では、`View#setOnClickListener`が使えない問題を、高階関数を利用することで解決。
 
 # 導入
 
