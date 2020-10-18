@@ -1,14 +1,17 @@
 package io.github.takusan23.motionlayoutswipefixframelayout
 
 import android.content.Context
+import android.graphics.Rect
 import android.util.AttributeSet
 import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.core.view.GestureDetectorCompat
+import androidx.core.view.children
 
 
 /**
@@ -56,7 +59,9 @@ class MotionLayoutSwipeFixFrameLayout(context: Context, attributeSet: AttributeS
      *
      * [onSwipeTargetViewDoubleClickFunc]を呼ばずに、重ねたViewのクリックイベントのみを取る場合はまずこの配列にViewを追加してください。
      *
-     * その後、[onBlockViewClickFunc]を利用することで、重ねたViewのクリックのみを処理できます。
+     * そうすることで、重ねたViewの[View.setOnClickListener]が呼ばれ、[onSwipeTargetViewClickFunc]は呼ばれなくなります。
+     *
+     * あと、[blockViewList]が押されたときに呼ばれる[onBlockViewClickFunc]なんてものもありますので、[View.setOnClickListener]が動かないときなどで使ってみてください。
      *
      * もし、MotionLayoutを動かしたくない場合は、重ねるViewに[View.isClickable]を[false]にすることで、MotionLayoutも動かなくなります。
      * */
@@ -97,7 +102,6 @@ class MotionLayoutSwipeFixFrameLayout(context: Context, attributeSet: AttributeS
      * */
     var onBlockViewClickFunc: ((view: View?) -> Unit)? = null
 
-
     /** 子のViewへタッチイベントを渡すかどうか */
     override fun onInterceptTouchEvent(ev: MotionEvent?): Boolean {
 
@@ -107,12 +111,18 @@ class MotionLayoutSwipeFixFrameLayout(context: Context, attributeSet: AttributeS
             val isTouchingSwipeTargetView = ev.x > swipeTargetView!!.left && ev.x < swipeTargetView!!.right && ev.y > swipeTargetView!!.top && ev.y < swipeTargetView!!.bottom
             if (isTouchingSwipeTargetView) {
 
+                // swipeTargetViewの上に重ねたViewのクリック判定
+                val blockTouchList = blockViewList.filter { blockView ->
+                    val screenPos = getViewPositionOnScreen(blockView)
+                    // View#rawXとかは画面から見ての座標。View#yは親のViewから見ての座標
+                    return@filter ev.rawX > screenPos.left && ev.rawX < screenPos.right && ev.rawY > screenPos.top && ev.rawY < screenPos.bottom
+                }
+
                 // クリックさせるなど
                 if (ev.action == MotionEvent.ACTION_UP) {
                     // MotionLayoutにはクリックを渡さないけど、指定したViewのときにはクリックを渡したい場合。
-                    val blockTouchList = blockViewList.filter { blockView -> ev.x > blockView.left && ev.x < blockView.right && ev.y > blockView.top && ev.y < blockView.bottom }
-                    // 条件にあったBlockViewがあれば
                     if (blockTouchList.isNotEmpty()) {
+                        // 条件にあったBlockViewがあれば
                         postDelayed({
                             // MotionLayoutへタッチを渡さないけど押したViewのクリックは渡す
                             blockTouchList.forEach { blockView ->
@@ -161,6 +171,59 @@ class MotionLayoutSwipeFixFrameLayout(context: Context, attributeSet: AttributeS
             Log.e(this::class.java.simpleName, "SwipeTargetViewとMotionLayoutがnull以外になっていることを確認してください。")
             return super.onInterceptTouchEvent(ev)
         }
+    }
+
+    /**
+     * 再帰的に子Viewを取得していく関数。ViewGroupがあれば取得。。。を続ける
+     * @param viewGroup 取得したい親ViewGroup
+     * @return 親ViewGroupに入っているすべてのView。
+     * */
+    fun getChildViewRecursive(viewGroup: ViewGroup): ArrayList<View> {
+        // 結果が入る
+        val resultChildView = arrayListOf<View>()
+
+        // 再帰的に呼ぶ関数
+        fun forEachFunc(childView: View) {
+            // Viewを追加していく
+            resultChildView.add(childView)
+            // ViewGroupならまたforEachへ
+            if (childView is ViewGroup) {
+                childView.children.toList().forEach(::forEachFunc)
+            }
+        }
+        // 最初
+        viewGroup.children.toList().forEach(::forEachFunc)
+        return resultChildView
+    }
+
+    /**
+     * [getChildViewRecursive]で取得したViewの中から、[View.isClickable]がtrueの物を取り出し、すべて[blockViewList]に追加する関数
+     *
+     * [blockViewList]が長くなってしまう場合は使ってください。
+     *
+     * @param viewGroup 親ViewGroup
+     * */
+    fun addAllIsClickableViewFromParentView(viewGroup: ViewGroup) {
+        val isClickableViewList = getChildViewRecursive(viewGroup).filter { view -> view.isClickable }
+        blockViewList.addAll(isClickableViewList)
+    }
+
+    /**
+     * 画面から見て、Viewがどの位置にあるかを返す関数。
+     *
+     * [View.getBottom]は、親要素から見ての位置なので、全体から見ての座標ではない
+     *
+     * @param view 座標を知りたいView
+     * @return Rect。[Rect.bottom]等で座標を取得することが出来ます。
+     * */
+    private fun getViewPositionOnScreen(view: View): Rect {
+        val intArray = IntArray(2)
+        view.getLocationOnScreen(intArray)
+        val left = intArray[0]
+        val top = intArray[1]
+        val right = left + view.width
+        val bottom = top + view.height
+        return Rect(left, top, right, bottom)
     }
 
 }
