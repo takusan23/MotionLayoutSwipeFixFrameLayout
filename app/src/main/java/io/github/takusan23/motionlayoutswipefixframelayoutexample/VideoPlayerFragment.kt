@@ -27,12 +27,6 @@ class VideoPlayerFragment : Fragment() {
             swipeTargetView = player_framelayout
             motionLayout = fragment_video_player_motionlayout
 
-            // swipeTargetViewの上にViewを重ねるて、そのViewにクリックイベントを付ける場合は以下の配列にそのViewを入れてください。（この例だと再生ボタン）
-            // blockViewList.add(player_fragment_play_button)
-
-            // もしblockViewListへ追加するViewが多い場合は、isClickableがtrueになっているViewを再帰的に取得する（すべて取得する）関数があります
-            addAllIsClickableViewFromParentView(player_framelayout)
-
             // swipeTargetViewをクリックさせたい場合は指定してね
             onSwipeTargetViewClickFunc = {
                 // プレイヤー押したとき。setOnClickListener代わり
@@ -43,6 +37,12 @@ class VideoPlayerFragment : Fragment() {
             onSwipeTargetViewDoubleClickFunc = { ev ->
                 showToast("だぶるたっぷ")
             }
+
+            // swipeTargetViewの上にViewを重ねるて、そのViewにクリックイベントを付ける場合は以下の配列にそのViewを入れてください。（この例だと再生ボタン）
+            // blockViewList.add(player_fragment_play_button)
+
+            // もしblockViewListへ追加するViewが多い場合は、isClickableがtrueになっているViewを再帰的に取得する（すべて取得する）関数があります
+            addAllIsClickableViewFromParentView(player_framelayout)
 
             // blockViewListに追加したViewが押されたとき
             onBlockViewClickFunc = { view ->

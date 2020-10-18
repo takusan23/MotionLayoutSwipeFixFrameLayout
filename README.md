@@ -8,7 +8,7 @@ Kotlinで書かれています。
 # 例
 このようにRecyclerViewのスクロールとMotionLayoutの`<onSwipe>`が共存しています。
 
-![Imgur](https://imgur.com/OFNwkIu.png)
+![Imgur](https://imgur.com/lhJB6Vr.gif)
 
 ソースはここ：https://github.com/takusan23/MotionLayoutSwipeFixFrameLayout/tree/master/app
 
@@ -127,6 +127,24 @@ dependencies {
 | `onSwipeTargetViewClickFunc`       | シングルタップ |
 | `onSwipeTargetViewDoubleClickFunc` | ダブルタップ   |
 
+### 任意 swipeTargetViewの上にViewを重ねる場合
+重ねたViewに、`View.setOnClickListener`をつけると、もれなく`onSwipeTargetViewClickFunc`が呼ばれてしまいます。  
+さらに、まれによく`View.setOnClickListener`すら呼ばれない時があるため、以下の手順を踏む必要があります。
+
+例：プレイヤーの上に置く再生ボタン等
+
+#### blockViewList配列に重ねるViewを追加する
+`blockViewList`に追加したViewをクリックすると`onSwipeTargetViewClickFunc`は呼ばれず、代わりに`onBlockViewClickFunc`を呼びます。
+
+`View.setOnClickListener`で動く場合は良いのですが、動かない場合があるので、その際は`onBlockViewClickFunc`でクリックイベントを処理してください。
+
+#### blockViewListへ追加するViewが多い場合
+登録を楽にする関数を用意しました。
+
+|関数名|機能|
+|---|---|
+|`addAllIsClickableViewFromParentView`|引数に入れたViewGroup内から、`View.isClickable`が`true`のViewを登録します。これは再帰的に動くため、ViewGroup内にあるViewGroupも登録されます。|
+|`getChildViewRecursive`|再帰的にViewを探し出してView配列を返す関数。ViewGroup内にあるViewGroupも登録される。`addAllIsClickableViewFromParentView`の内部で使っているが、プライベートな関数ではないので利用できます。|
 
 これらをふまえて書くとこんな感じ
 
@@ -135,16 +153,29 @@ dependencies {
 activity_main_swipe_fix_framelayout.apply {
     allowIdList.add(R.id.fragment_video_player_motion_transition_end)
     // 以下2つは必須
-    swipeTargetView = player_image_view
+    swipeTargetView = player_framelayout
     motionLayout = fragment_video_player_motionlayout
+    
     // swipeTargetViewをクリックさせたい場合は指定してね
     onSwipeTargetViewClickFunc = {
         // プレイヤー押したとき。setOnClickListener代わり
-        Toast.makeText(context, "プレイヤー押した！", Toast.LENGTH_SHORT).show()
+        showToast("プレイヤー押した！")
     }
     // タブルタップ版
     onSwipeTargetViewDoubleClickFunc = { ev ->
-        Toast.makeText(context, "ダブルタップ", Toast.LENGTH_SHORT).show()
+        showToast("だぶるたっぷ")
+    }
+    
+    // swipeTargetViewの上にViewを重ねるて、そのViewにクリックイベントを付ける場合は以下の配列にそのViewを入れてください。（この例だと再生ボタン）
+    // blockViewList.add(player_fragment_play_button)
+    // もしblockViewListへ追加するViewが多い場合は、isClickableがtrueになっているViewを再帰的に取得する（すべて取得する）関数があります
+    addAllIsClickableViewFromParentView(player_framelayout)
+    
+    // blockViewListに追加したViewが押されたとき
+    onBlockViewClickFunc = { view ->
+        if (view?.id == player_fragment_play_button?.id) {
+            showToast("再生")
+        }
     }
 }
 ```
@@ -164,6 +195,7 @@ activity_main_swipe_fix_framelayout.apply {
     - なんか同じIDの`<Constraint>`が連続で追加されたりするんだけどこれおま環？
     - xmlファイルを手動で書き換えた場合はLayout Editor開き直せ
 - 並べたい時は`Chain`を使う。`width:0dp`で均等になる？
+- `View#rawX`は画面から見ての座標。`View#x`は親Viewから見ての位置
 
 # ライセンス
 ```
